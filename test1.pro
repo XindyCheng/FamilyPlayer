@@ -12,15 +12,10 @@ CONFIG += c++17
 SOURCES += \
     main.cpp \
     mainwindow.cpp \
-    qmediaplaylist.cpp \
-    qplaylistfileparser.cpp \
     qvideowidget_p.cpp
 
 HEADERS += \
     mainwindow.h \
-    qmediaplaylist.h \
-    qmediaplaylist_p.h \
-    qplaylistfileparser_p.h \
     qvideowidget_p.h
 
 FORMS += \
