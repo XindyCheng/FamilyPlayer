@@ -13,13 +13,15 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     qmediaplaylist.cpp \
-    qplaylistfileparser.cpp
+    qplaylistfileparser.cpp \
+    qvideowidget_p.cpp
 
 HEADERS += \
     mainwindow.h \
     qmediaplaylist.h \
     qmediaplaylist_p.h \
-    qplaylistfileparser_p.h
+    qplaylistfileparser_p.h \
+    qvideowidget_p.h
 
 FORMS += \
     mainwindow.ui
@@ -28,3 +30,18 @@ FORMS += \
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+RESOURCES += \
+    test1.qrc
+
+DISTFILES += \
+    images/button-fast-forward.PNG \
+    images/button-next.PNG \
+    images/button-pause.PNG \
+    images/button-play.PNG \
+    images/button-previous.PNG \
+    images/button-rewind.PNG \
+    images/button-stop.PNG \
+    images/volume-high.PNG \
+    images/volume-low.PNG \
+    images/volume-off.PNG
