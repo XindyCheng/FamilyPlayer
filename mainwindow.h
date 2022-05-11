@@ -1,7 +1,6 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "QtMultimediaWidgets/qvideowidget.h"
 #include <QMainWindow>
 #include <QWidget>
 #include <QListWidget>
@@ -12,7 +11,6 @@
 #include <QVideoWidget>
 #include <QAudioOutput>
 #include <QKeyEvent>
-#include "qmediaplaylist.h"
 #include "qvideowidget_p.h"
 
 QT_BEGIN_NAMESPACE
