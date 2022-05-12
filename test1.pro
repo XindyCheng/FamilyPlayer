@@ -12,14 +12,17 @@ CONFIG += c++17
 SOURCES += \
     main.cpp \
     mainwindow.cpp \
-    qvideowidget_p.cpp
+    qvideowidget_p.cpp \
+    control.cpp
 
 HEADERS += \
     mainwindow.h \
-    qvideowidget_p.h
+    qvideowidget_p.h \
+    control.h
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    control.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
