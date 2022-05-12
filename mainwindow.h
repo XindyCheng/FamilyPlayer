@@ -11,7 +11,13 @@
 #include <QVideoWidget>
 #include <QAudioOutput>
 #include <QKeyEvent>
+#include <QDragEnterEvent>
+#include <QDropEvent>
+#include <QMimeData>
 #include "qvideowidget_p.h"
+#include "control.h"
+#include <QScreen>
+#include <QRect>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -30,8 +36,12 @@ public:
     void readPlaylist();
     void writePlaylist();
 
+    //拖拽
+    void dragEnterEvent(QDragEnterEvent *event);
+    void dropEvent(QDropEvent *event);
+
 private slots:
-    void on_pushButton_clicked();   //添加播放文件
+    void actionOpenSlot();   //添加播放文件
 
     void on_playORpause_clicked();  //播放暂停按钮
 
@@ -39,11 +49,19 @@ private slots:
 
     void on_nextButton_clicked();   //下一首按钮
 
+    void on_drawbackButton_clicked();   //快进
+
+    void on_fastforwardButton_clicked();    //快退
+
     void updateDurationInfo(qint64 currentInfo);
 
     void durationChanged(qint64 duration);
 
     void positionChanged(qint64 progress);
+
+    void on_ratebox_currentIndexChanged(int index);  //倍速
+
+    void about_to_finish();     //播放模式
 
     void on_slider_sliderMoved(int position);
 
@@ -63,11 +81,15 @@ private slots:
 
     void closeEvent (QCloseEvent * e);    //退出
 
+    void metadatachange();
+
 private:
     Ui::MainWindow *ui;
     QMediaPlayer *player;
     QVideoWidget *VideoWidget;
     QAudioOutput *AudioOutput;
+
+    Control *control;
 
     // 播放列表
     QStringList Playlist;

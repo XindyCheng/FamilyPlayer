@@ -16,16 +16,6 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="QPushButton" name="pushButton">
-      <property name="text">
-       <string>添加</string>
-      </property>
-      <property name="shortcut">
-       <string>Ctrl+I</string>
-      </property>
-     </widget>
-    </item>
-    <item>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
        <widget class="QListWidget" name="playlist">
@@ -47,6 +37,13 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>TextLabel</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
     <item>
@@ -60,8 +57,14 @@
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
        <widget class="QLabel" name="labelDuration">
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="text">
-         <string>00:00/00:00</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;00:00/00:00&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="margin">
          <number>0</number>
@@ -82,10 +85,36 @@
        </spacer>
       </item>
       <item>
-       <widget class="QToolButton" name="toolButton">
-        <property name="text">
-         <string>播放模式</string>
+       <widget class="QComboBox" name="playmode">
+        <property name="currentText">
+         <string>单曲播放</string>
         </property>
+        <property name="iconSize">
+         <size>
+          <width>30</width>
+          <height>16</height>
+         </size>
+        </property>
+        <item>
+         <property name="text">
+          <string>单曲播放</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>顺序循环</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>随机播放</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>单曲循环</string>
+         </property>
+        </item>
        </widget>
       </item>
       <item>
@@ -102,7 +131,7 @@
        </spacer>
       </item>
       <item>
-       <widget class="QComboBox" name="comboBox">
+       <widget class="QComboBox" name="ratebox">
         <property name="enabled">
          <bool>true</bool>
         </property>
@@ -113,7 +142,7 @@
          </size>
         </property>
         <property name="currentText">
-         <string>1.0</string>
+         <string>0.5</string>
         </property>
         <property name="iconSize">
          <size>
@@ -123,22 +152,22 @@
         </property>
         <item>
          <property name="text">
+          <string>0.5</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
           <string>1.0</string>
          </property>
         </item>
         <item>
          <property name="text">
+          <string>1.5</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
           <string>2.0</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>4.0</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>8.0</string>
          </property>
         </item>
        </widget>
@@ -165,7 +194,7 @@
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="test1.qrc">
+         <iconset>
           <normaloff>:/images/button-previous.PNG</normaloff>:/images/button-previous.PNG</iconset>
         </property>
         <property name="iconSize">
@@ -183,7 +212,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton_3">
+       <widget class="QPushButton" name="drawbackButton">
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;后退&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
@@ -191,7 +220,7 @@
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="test1.qrc">
+         <iconset>
           <normaloff>:/images/button-rewind.PNG</normaloff>:/images/button-rewind.PNG</iconset>
         </property>
         <property name="iconSize">
@@ -211,7 +240,7 @@
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="test1.qrc">
+         <iconset>
           <normaloff>:/images/button-play.PNG</normaloff>:/images/button-play.PNG</iconset>
         </property>
         <property name="iconSize">
@@ -229,7 +258,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton_2">
+       <widget class="QPushButton" name="fastforwardButton">
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;快进&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
@@ -237,7 +266,7 @@
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="test1.qrc">
+         <iconset>
           <normaloff>:/images/button-fast-forward.PNG</normaloff>:/images/button-fast-forward.PNG</iconset>
         </property>
         <property name="iconSize">
@@ -260,7 +289,7 @@
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="test1.qrc">
+         <iconset>
           <normaloff>:/images/button-next.PNG</normaloff>:/images/button-next.PNG</iconset>
         </property>
         <property name="iconSize">
@@ -296,7 +325,7 @@
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="test1.qrc">
+         <iconset>
           <normaloff>:/images/volume-high.PNG</normaloff>:/images/volume-high.PNG</iconset>
         </property>
         <property name="iconSize">
@@ -370,7 +399,7 @@
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="test1.qrc">
+         <iconset>
           <normaloff>:/images/button-fullscreen-on.PNG</normaloff>:/images/button-fullscreen-on.PNG</iconset>
         </property>
         <property name="iconSize">
@@ -400,7 +429,22 @@
      <height>29</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>打开</string>
+    </property>
+    <addaction name="actionopenfile"/>
+   </widget>
+   <addaction name="menu"/>
   </widget>
+  <action name="actionopenfile">
+   <property name="text">
+    <string>openfile</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+I</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -410,8 +454,6 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
- <resources>
-  <include location="test1.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

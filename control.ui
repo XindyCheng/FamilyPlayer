@@ -1,0 +1,372 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Control</class>
+ <widget class="QDialog" name="Control">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1103</width>
+    <height>90</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>0</width>
+    <height>90</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>16777215</width>
+    <height>97</height>
+   </size>
+  </property>
+  <property name="mouseTracking">
+   <bool>true</bool>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QSlider" name="horizontalSlider">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QLabel" name="labelDuration">
+       <property name="text">
+        <string>00:00/00:00</string>
+       </property>
+       <property name="margin">
+        <number>0</number>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QComboBox" name="comboBox">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>60</width>
+         <height>30</height>
+        </size>
+       </property>
+       <property name="currentText">
+        <string>1.0</string>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>25</width>
+         <height>25</height>
+        </size>
+       </property>
+       <item>
+        <property name="text">
+         <string>1.0</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>2.0</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>4.0</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>8.0</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_5">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QToolButton" name="toolButton">
+       <property name="text">
+        <string>播放模式</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_3">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="previousButton">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;上一个&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="test1.qrc">
+         <normaloff>:/images/button-previous.PNG</normaloff>:/images/button-previous.PNG</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>25</width>
+         <height>25</height>
+        </size>
+       </property>
+       <property name="shortcut">
+        <string>Ctrl+Left</string>
+       </property>
+       <property name="flat">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_3">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;后退&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="test1.qrc">
+         <normaloff>:/images/button-rewind.PNG</normaloff>:/images/button-rewind.PNG</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>25</width>
+         <height>25</height>
+        </size>
+       </property>
+       <property name="flat">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="playORpause">
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="test1.qrc">
+         <normaloff>:/images/button-play.PNG</normaloff>:/images/button-play.PNG</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>35</width>
+         <height>35</height>
+        </size>
+       </property>
+       <property name="shortcut">
+        <string>Space</string>
+       </property>
+       <property name="flat">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_2">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;快进&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="test1.qrc">
+         <normaloff>:/images/button-fast-forward.PNG</normaloff>:/images/button-fast-forward.PNG</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>25</width>
+         <height>25</height>
+        </size>
+       </property>
+       <property name="flat">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="nextButton">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;下一个&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="test1.qrc">
+         <normaloff>:/images/button-next.PNG</normaloff>:/images/button-next.PNG</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>25</width>
+         <height>25</height>
+        </size>
+       </property>
+       <property name="shortcut">
+        <string>Ctrl+Right</string>
+       </property>
+       <property name="flat">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="muteButton">
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="test1.qrc">
+         <normaloff>:/images/volume-high.PNG</normaloff>:/images/volume-high.PNG</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>30</width>
+         <height>30</height>
+        </size>
+       </property>
+       <property name="flat">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSlider" name="volumeSlider">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="maximum">
+        <number>100</number>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="invertedAppearance">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="minimumSize">
+        <size>
+         <width>20</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_4">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="fullScreenButton">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;全屏显示&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="test1.qrc">
+         <normaloff>:/images/button-fullscreen-off.PNG</normaloff>:/images/button-fullscreen-off.PNG</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>25</width>
+         <height>25</height>
+        </size>
+       </property>
+       <property name="shortcut">
+        <string>Ctrl+F</string>
+       </property>
+       <property name="flat">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources>
+  <include location="test1.qrc"/>
+ </resources>
+ <connections/>
+</ui>

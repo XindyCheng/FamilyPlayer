@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 # include <QDebug>
 //#include <QFileInfo>
+#include <QMediaMetaData>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow)
@@ -21,9 +22,22 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->slider->setRange(0, player->duration());
 
+    //设置默认播放速率
+    ui->ratebox->setCurrentIndex(1);
+
     //播放列表
     CurrentIndex = -1;
-    readPlaylist();
+    readPlaylist();    //载入之前的播放列表
+    this->setAcceptDrops(true);
+    ui->playlist->setAcceptDrops(true);    //接受拖拽事件
+
+    ui->label->hide();
+
+    //setMouseTracking(true);
+    //ui->centralwidget->setMouseTracking(true);
+
+    //菜单栏-添加
+    connect(ui->actionopenfile,SIGNAL(triggered()),this,SLOT(actionOpenSlot()));
 
     //视频时长信号变化
     connect(player, &QMediaPlayer::durationChanged, this, &MainWindow::durationChanged);
@@ -31,6 +45,11 @@ MainWindow::MainWindow(QWidget *parent)
     connect(player, &QMediaPlayer::positionChanged, this, &MainWindow::positionChanged);
     //音量变化信号
     connect(AudioOutput, &QAudioOutput::volumeChanged, this, &MainWindow::setVolume);
+
+    //播完时判断当前播放模式
+    connect(player, &QMediaPlayer::mediaStatusChanged, this, &MainWindow::about_to_finish);
+
+    connect(player,&QMediaPlayer::metaDataChanged,this,&MainWindow::metadatachange);
 
 
 }
@@ -48,6 +67,57 @@ void MainWindow::closeEvent (QCloseEvent * e){
         e->accept();//不会将事件传递给组件的父组件
     }
     else  e->ignore();
+
+}
+
+void MainWindow::metadatachange(){
+
+     /*
+     ui->playlist->setAutoFillBackground(true);   // 这个属性一定要设置
+     QPalette pal(palette());
+     //pal.setBrush(ui->widget->backgroundRole(), QBrush(pic.scaled(pic.size(), Qt::IgnoreAspectRatio,
+                           //Qt::SmoothTransformation)));
+     pal.setBrush(ui->playlist->backgroundRole(), QBrush(pic));
+     ui->playlist->setPalette(pal);
+     //ui->videowidget->setBackgroundRole();
+     */
+    //ui->widget->show();
+    qDebug()<<this->player->metaData().value(QMediaMetaData::ThumbnailImage);
+     if(this->player->metaData().value(QMediaMetaData::ThumbnailImage).isValid()){
+         //ui->widget->setVisible(true);
+         ui->videowidget->setVisible(false);
+         //ui->videowidget->hide();
+
+         QImage pic = this->player->metaData().value(QMediaMetaData::ThumbnailImage).value<QImage>();
+
+         //QLabel *label=new QLabel(this);
+         //ui->label->setGeometry(500,150,300,280);
+         //QImage dest=pic.scaled(pic.size()*0.65,Qt::KeepAspectRatio);
+         QImage dest=pic.scaled(ui->videowidget->size(),Qt::KeepAspectRatio);
+         ui->label->setPixmap(QPixmap::fromImage(dest));
+
+         ui->label->show();
+
+         //QPixmap pix = QPixmap::fromImage(pic.scaled(ui->widget->size(),Qt::KeepAspectRatio));
+         //QPalette pal;
+         //pal.setBrush(ui->widget->backgroundRole(),QBrush(pix));
+         //setPalette(pal);
+/*
+         QPixmap pix = QPixmap::fromImage(pic.scaled(pic.size(),Qt::KeepAspectRatio));
+         QPalette pal;
+         pal.setBrush(backgroundRole(),QBrush(pix));
+         setPalette(pal);
+*/
+
+     }
+     else{
+         qDebug()<<"??";
+         ui->videowidget->setVisible(true);
+         //ui->videowidget->show();
+         ui->label->hide();
+         //ui->widget->hide();
+     }
+
 
 }
 
@@ -92,8 +162,17 @@ void MainWindow::writePlaylist(){
     file.close();
 }
 
+//高亮
+void MainWindow::highlight(int lastindex, int currentindex){
+    //ui->playlist->setCurrentRow(currentindex);
+    if(lastindex!=-1)
+        ui->playlist->item(lastindex)->setBackground(QColor(255,255,255));
+    ui->playlist->item(currentindex)->setBackground(QColor(205,232,255));
+    ui->playlist->setCurrentRow(currentindex);
+}
+
 //添加到媒体库
-void MainWindow::on_pushButton_clicked()
+void MainWindow::actionOpenSlot()
 {
     QFileDialog fileDialog(this);
     fileDialog.setDirectory(QStandardPaths::standardLocations(QStandardPaths::DesktopLocation).value(0, QDir::homePath()));
@@ -148,12 +227,31 @@ int MainWindow::hasinMediaPlaylist(QString filename)    //应该不用了
     return -1;
     */
 }
-void MainWindow::highlight(int lastindex, int currentindex){
-    //ui->playlist->setCurrentRow(currentindex);
-    if(lastindex!=-1)
-        ui->playlist->item(lastindex)->setBackground(QColor(255,255,255));
-    ui->playlist->item(currentindex)->setBackground(QColor(205,232,255));
-    ui->playlist->setCurrentRow(currentindex);
+
+void MainWindow::dragEnterEvent(QDragEnterEvent *event){
+    event->acceptProposedAction();
+}
+
+void MainWindow::dropEvent(QDropEvent *event){
+    const QMimeData *qm = event->mimeData();
+    QString filename = qm->urls()[0].toLocalFile();
+    qDebug()<<filename;
+
+    if(filename == "") return;
+    int lastindex = this->CurrentIndex;
+    this->CurrentIndex = this->Playlist.indexOf(filename);  //Playlist中是否已有该文件
+    if(this->CurrentIndex == -1){   //没有在Playlist中
+        this->CurrentIndex = this->Playlist.length();
+        this->Playlist.append(filename);
+        ui->playlist->addItem(QFileInfo(filename).fileName());
+    }
+    highlight(lastindex, this->CurrentIndex);
+    player->setSource(QUrl::fromLocalFile(filename));
+    player->play();
+
+    ui->playORpause->setIcon(QPixmap(":/images/button-pause.PNG"));
+    ui->playORpause->setToolTip("暂停");
+
 }
 
 //双击播放列表中某一项
@@ -272,6 +370,33 @@ void MainWindow::on_slider_sliderMoved(int position)
     player->setPosition(position);
 }
 
+//进度快退按钮
+void MainWindow::on_drawbackButton_clicked()
+{
+
+    QString str=ui->labelDuration->text();
+    QStringList list=str.split("/");
+    if(ui->slider->value()-3000<0)
+        on_slider_sliderMoved(0);
+    else on_slider_sliderMoved(ui->slider->value()-3000);
+}
+
+//进度快进按钮
+void MainWindow::on_fastforwardButton_clicked()
+{
+    QString str=ui->labelDuration->text();
+    QStringList list=str.split("/");
+    QStringList maxsum=list.at(1).split(":");
+    int maxnum=0;
+    for(int i=maxsum.size()-1;i>=0;i--)
+    {
+        maxnum+=maxsum.at(i).toInt()*qPow(60,(maxsum.size()-i-1))*1000;
+    }
+    if(maxnum <= ui->slider->value()+3000)
+        on_slider_sliderMoved(maxnum);
+    else on_slider_sliderMoved(ui->slider->value()+3000);
+}
+
 //静音切换
 void MainWindow::on_muteButton_clicked()
 {
@@ -284,6 +409,12 @@ void MainWindow::on_muteButton_clicked()
 void MainWindow::on_fullScreenButton_clicked()
 {
     ui->videowidget->setFullScreen(!ui->videowidget->isFullScreen());
+    //ui->videowidget->setMouseTracking(true);
+    control = new Control(ui->videowidget);
+    QList<QScreen *> list_screen =  QGuiApplication::screens();  //多显示器
+    QRect rect = list_screen.at(0)->geometry();
+    control->setGeometry(0,rect.height()-90,rect.width(),90);
+    control->show();
 }
 
 //拖动音量进度条
@@ -340,3 +471,69 @@ void MainWindow:: keyPressEvent(QKeyEvent *event)
     }
 }
 
+//播放模式
+void MainWindow::about_to_finish()
+{
+    if(player->mediaStatus()!=player->EndOfMedia){
+        return;
+    }
+
+    qDebug()<<"!!!!";
+    int combox_index = ui->playmode->currentIndex();
+    int lastindex;
+    switch(combox_index){
+    case 0:{    //单曲播放
+        qDebug()<<"000";
+        break;
+    }
+
+    case 1:{    //顺序播放
+        qDebug()<<"111";
+        lastindex = this->CurrentIndex;
+        this->CurrentIndex = (this->CurrentIndex+1)%(this->Playlist.length());
+        player->setSource(QUrl::fromLocalFile(this->Playlist[this->CurrentIndex]));
+        highlight(lastindex, this->CurrentIndex);
+        player->play();
+        break;
+    }
+
+    case 2:{    //随机播放
+        qDebug()<<"222";
+        lastindex = this->CurrentIndex;
+        srand(QTime(0,0,0).secsTo(QTime::currentTime()));
+        this->CurrentIndex = rand()%(this->Playlist.length());
+        if(this->CurrentIndex==lastindex&&this->Playlist.length()!=1)
+            this->CurrentIndex=(this->CurrentIndex-1)%this->Playlist.length();
+        player->setSource(QUrl::fromLocalFile(this->Playlist[this->CurrentIndex]));
+        highlight(lastindex, this->CurrentIndex); player->play();
+        break;
+    }
+
+    case 3:{    //单曲循环
+        qDebug()<<"333";
+        player->setSource(QUrl::fromLocalFile(this->Playlist[this->CurrentIndex]));
+        player->play();
+        break;
+    }
+    }
+}
+
+//倍速播放
+void MainWindow::on_ratebox_currentIndexChanged(int index)
+{
+    switch(index)
+    {
+        case 0:
+            player->setPlaybackRate(0.5);
+            break;
+        case 1:
+            player->setPlaybackRate(1.0);
+            break;
+        case 2:
+            player->setPlaybackRate(1.5);
+            break;
+        case 3:
+            player->setPlaybackRate(2.0);
+            break;
+    }
+}
