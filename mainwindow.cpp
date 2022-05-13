@@ -73,7 +73,7 @@ void MainWindow::closeEvent (QCloseEvent * e){
 void MainWindow::metadatachange(){
 
      /*
-     ui->playlist->setAutoFillBackground(true);   // 这个属性一定要设置
+     ui->playlist->setAutoFillBackground(true); 
      QPalette pal(palette());
      //pal.setBrush(ui->widget->backgroundRole(), QBrush(pic.scaled(pic.size(), Qt::IgnoreAspectRatio,
                            //Qt::SmoothTransformation)));
@@ -102,12 +102,12 @@ void MainWindow::metadatachange(){
          //QPalette pal;
          //pal.setBrush(ui->widget->backgroundRole(),QBrush(pix));
          //setPalette(pal);
-/*
+         /*
          QPixmap pix = QPixmap::fromImage(pic.scaled(pic.size(),Qt::KeepAspectRatio));
          QPalette pal;
          pal.setBrush(backgroundRole(),QBrush(pix));
          setPalette(pal);
-*/
+         */
 
      }
      else{
