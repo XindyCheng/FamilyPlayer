@@ -40,8 +40,29 @@ public:
     void dragEnterEvent(QDragEnterEvent *event);
     void dropEvent(QDropEvent *event);
 
+    //子窗口（悬浮窗口）中要调用的函数
+    QMediaPlayer* sendplayer(); //player
+    QAudioOutput* sendaudio();  //AudioOutput
+    qint64 sendDuration();  //Duration
+    float sendvolume();     //volume
+    int rate_currentIndex();    //播放速率
+    int mode_currentIndex();    //播放模式
+    QIcon sendmuteButton();     //静音图标
+    QIcon sendplayORpauseButton();   //播放/暂停图标
+
+
+    void playORpause(); //播放/暂停
+    void previous();    //上一首
+    void next();    //下一首
+    void drawback();    //快退
+    void fastforward();     //快进
+    void playmode();     //播放模式
+    void on_ratebox_Changed(int index);  //倍速
+
 private slots:
     void actionOpenSlot();   //添加播放文件
+
+    void playbackstatechange();
 
     void on_playORpause_clicked();  //播放暂停按钮
 
@@ -49,9 +70,9 @@ private slots:
 
     void on_nextButton_clicked();   //下一首按钮
 
-    void on_drawbackButton_clicked();   //快进
+    void on_drawbackButton_clicked();   //快退
 
-    void on_fastforwardButton_clicked();    //快退
+    void on_fastforwardButton_clicked();    //快进
 
     void updateDurationInfo(qint64 currentInfo);
 
@@ -83,13 +104,17 @@ private slots:
 
     void metadatachange();
 
+    void paintEvent(QPaintEvent *event);    //有缩放事件时重绘
+
+    void shrink();  //接收小屏信号
+
 private:
     Ui::MainWindow *ui;
     QMediaPlayer *player;
     QVideoWidget *VideoWidget;
     QAudioOutput *AudioOutput;
 
-    Control *control;
+    Control *control=nullptr;
 
     // 播放列表
     QStringList Playlist;

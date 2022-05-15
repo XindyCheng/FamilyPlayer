@@ -30,7 +30,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QSlider" name="horizontalSlider">
+    <widget class="QSlider" name="slider">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
@@ -62,43 +62,25 @@
       </spacer>
      </item>
      <item>
-      <widget class="QComboBox" name="comboBox">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>60</width>
-         <height>30</height>
-        </size>
-       </property>
-       <property name="currentText">
-        <string>1.0</string>
-       </property>
-       <property name="iconSize">
-        <size>
-         <width>25</width>
-         <height>25</height>
-        </size>
-       </property>
+      <widget class="QComboBox" name="playmode">
        <item>
         <property name="text">
-         <string>1.0</string>
+         <string>单曲播放</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>2.0</string>
+         <string>顺序播放</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>4.0</string>
+         <string>随机播放</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>8.0</string>
+         <string>单曲循环</string>
         </property>
        </item>
       </widget>
@@ -117,10 +99,45 @@
       </spacer>
      </item>
      <item>
-      <widget class="QToolButton" name="toolButton">
-       <property name="text">
-        <string>播放模式</string>
+      <widget class="QComboBox" name="ratebox">
+       <property name="enabled">
+        <bool>true</bool>
        </property>
+       <property name="minimumSize">
+        <size>
+         <width>60</width>
+         <height>30</height>
+        </size>
+       </property>
+       <property name="currentText">
+        <string>0.5</string>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>25</width>
+         <height>25</height>
+        </size>
+       </property>
+       <item>
+        <property name="text">
+         <string>0.5</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>1.0</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>1.5</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>2.0</string>
+        </property>
+       </item>
       </widget>
      </item>
      <item>
@@ -163,7 +180,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton_3">
+      <widget class="QPushButton" name="drawbackButton">
        <property name="toolTip">
         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;后退&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
@@ -209,7 +226,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton_2">
+      <widget class="QPushButton" name="fastforwardButton">
        <property name="toolTip">
         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;快进&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
@@ -310,7 +327,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QLabel" name="label">
+      <widget class="QLabel" name="volumeNum">
        <property name="minimumSize">
         <size>
          <width>20</width>
