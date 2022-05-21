@@ -10,7 +10,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     player = new QMediaPlayer;
-    playerForMetadata = new QMediaPlayer;    
+    playerForMetadata = new QMediaPlayer;
     //播放窗口
     player->setVideoOutput(ui->videowidget);
 
@@ -193,8 +193,8 @@ void MainWindow::writePlaylist(){
 //高亮
 void MainWindow::highlight(int lastindex, int currentindex){
     if(lastindex!=-1)
-        ui->playlist->item(lastindex)->setBackground(QColor(255,255,255));
-    ui->playlist->item(currentindex)->setBackground(QColor(205,232,255));
+        ui->playlist->item(lastindex)->setBackground(QColor(85,85,127));
+    ui->playlist->item(currentindex)->setBackground(QColor(216,191,216));
     ui->playlist->setCurrentRow(currentindex);
 }
 
@@ -384,7 +384,7 @@ void MainWindow::on_playORpause_clicked()
 
 //上一首
 void MainWindow::on_previousButton_clicked()
-{    
+{
     int playrow=this->Playlist.count();//播放列表总长度
     int state=0;//表示初始状态为播放还是暂停，初始值为0，表示处于暂停状态
     //如果当前处于播放状态，先暂停播放，state=1
@@ -705,12 +705,12 @@ QIcon MainWindow::sendplayORpauseButton()
 //缩屏
 void MainWindow::shrink()
 {
-    ui->ratebox->setCurrentIndex(control->rate_currentIndex());
-    ui->playmode->setCurrentIndex(control->mode_currentIndex());
-    ui->muteButton->setIcon(control->sendmuteButton());
-    if(ui->videowidget->isFullScreen()){
-        //缩小屏幕时把全屏时的悬浮框control的播放速率和播放模式的值传到主屏幕中
 
+        ui->ratebox->setCurrentIndex(control->rate_currentIndex());
+        ui->playmode->setCurrentIndex(control->mode_currentIndex());
+        ui->muteButton->setIcon(control->sendmuteButton());
+        if(ui->videowidget->isFullScreen()){
+            //缩小屏幕时把全屏时的悬浮框control的播放速率和播放模式的值传到主屏幕中
         ui->videowidget->setFullScreen(false);
         ui->videowidget->showNormal();
 
@@ -813,20 +813,4 @@ void MainWindow::playmode()
 void MainWindow::openslot()
 {
     return actionOpenSlot();
-}
-void MainWindow::update_Duration(qint64 currentInfo)
-{
-    return updateDurationInfo(currentInfo);
-}
-void MainWindow::duration_Changed(qint64 duration)
-{
-    return durationChanged(duration);
-}
-void MainWindow::position_Changed(qint64 progress)
-{
-    return positionChanged(progress);
-}
-void MainWindow::sliderMoved(int position)
-{
-    player->setPosition(position);
 }
