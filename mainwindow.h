@@ -48,7 +48,8 @@ public:
     int mode_currentIndex();    //播放模式
     QIcon sendmuteButton();     //静音图标
     QIcon sendplayORpauseButton();   //播放/暂停图标
-
+    QString sendslider();
+    int sendposition();
 
     void openslot();
     void playORpause(); //播放/暂停
@@ -58,10 +59,7 @@ public:
     void fastforward();     //快进
     void playmode();     //播放模式
     void on_ratebox_Changed(int index);  //倍速
-    void update_Duration(qint64 currentInfo );
-    void duration_Changed(qint64 duration);
-    void position_Changed(qint64 progress);
-    void sliderMoved(int position);
+
 
 private slots:
     void actionOpenSlot();   //添加播放文件
@@ -115,8 +113,6 @@ private slots:
     void shrink();  //接收小屏信号
 
     void deleteitem();
-
-
 
 private:
 

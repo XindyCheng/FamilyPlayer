@@ -12,7 +12,6 @@ Control::Control(QWidget *parent) :
 
     // 把传过来的父窗口类的指针强制类型转换
     m_parent = static_cast<MainWindow*>(parent);
-
     //音量、进度条设置与主屏幕相同
     set_volume(m_parent->sendvolume());
     ui->volumeSlider->setRange(0, 100);
@@ -20,7 +19,6 @@ Control::Control(QWidget *parent) :
     ui->slider->setRange(0, m_parent->sendplayer()->duration());
     ui->playmode->setCurrentIndex(m_parent->mode_currentIndex());
     ui->ratebox->setCurrentIndex(m_parent->rate_currentIndex());
-
     //静音键、播放/暂停键与主屏幕相同
     ui->muteButton->setIcon(m_parent->sendmuteButton());
     ui->playORpause->setIcon(m_parent->sendplayORpauseButton());
@@ -113,13 +111,14 @@ QIcon Control::sendplayORpauseButton()
     return ui->playORpause->icon();
 }
 
+
 //播放状态图标切换
 void Control::playbackstatechange(){
     if(m_parent->sendplayer()->playbackState()==m_parent->sendplayer()->PlayingState){
         ui->playORpause->setIcon(QPixmap(":/images/button-pause.PNG"));
         ui->playORpause->setToolTip("暂停");
     }
-    else{
+    else if(m_parent->sendplayer()->playbackState()==m_parent->sendplayer()->PausedState){
         ui->playORpause->setIcon(QPixmap(":/images/button-play.PNG"));
         ui->playORpause->setToolTip("播放");
     }
@@ -213,10 +212,14 @@ void Control::set_volume(float volume)
     ui->volumeNum->setText(QString::number(position+1,10));
 }
 
+void Control::initslider()
+{
+    ui->labelDuration->setText(m_parent->sendslider());
+    ui->slider->setSliderPosition(m_parent->sendposition());
+}
 //实时显示已播放时长
 void Control::updateDurationInfo(qint64 currentInfo)
 {
-
     QString tStr;
     duration=m_parent->sendDuration();
     if (currentInfo || duration) {
@@ -228,39 +231,29 @@ void Control::updateDurationInfo(qint64 currentInfo)
         if (duration > 3600)
             format = "hh:mm:ss";
         tStr = currentTime.toString(format) + " / " + totalTime.toString(format);
-    }
-    ui->labelDuration->setText(tStr);    
-    //m_parent->update_Duration(currentInfo);
+    }    
+    ui->labelDuration->setText(tStr);
 }
 
 //视频时长变化
 void Control::durationChanged(qint64 p_duration)
 {
-
-    duration = p_duration / 1000;
+    //duration=p_duration/1000;
     ui->slider->setMaximum(p_duration);
-
-    //m_parent->duration_Changed(p_duration);
 }
 
 //进度条实时显示视频进度
 void Control::positionChanged(qint64 progress)
 {
-
     if (!ui->slider->isSliderDown())
         ui->slider->setValue(progress);
 
     updateDurationInfo(progress / 1000);
-
-   // m_parent->position_Changed(progress);
 }
 //拖动视频进度条
 void Control::on_slider_sliderMoved(int position)
 {
-
     m_parent->sendplayer()->setPosition(position);
-
-    //m_parent->sliderMoved(position);
 }
 
 
@@ -278,10 +271,6 @@ void  Control::keyPressEvent(QKeyEvent *event)
         else if(event->key()==Qt::Key_Down)
         {
             on_volumeSlider_sliderMoved(ui->volumeSlider->value()-5);
-        }
-        else if(event->key()==Qt::Key_I)
-        {
-            m_parent->openslot();
         }
     }
 }

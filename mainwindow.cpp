@@ -289,6 +289,8 @@ void MainWindow::on_playlist_itemDoubleClicked(QListWidgetItem *item)
     highlight(lastindex, this->CurrentIndex);
     player->setSource(QUrl::fromLocalFile(this->Playlist[this->CurrentIndex]));
     player->play();
+    //qDebug()<<duration;
+
 
 }
 //删除选中音视频
@@ -457,7 +459,7 @@ void MainWindow::on_nextButton_clicked()
 //实时显示已播放时长
 void MainWindow::updateDurationInfo(qint64 currentInfo)
 {
-    QString tStr;
+    QString tStr;    
     if (currentInfo || duration) {
         QTime currentTime((currentInfo / 3600) % 60, (currentInfo / 60) % 60,
             currentInfo % 60, (currentInfo * 1000) % 1000);
@@ -540,9 +542,9 @@ void MainWindow::on_fullScreenButton_clicked()
     control = new Control(this);
     QList<QScreen *> list_screen =  QGuiApplication::screens();  //多显示器
     QRect rect = list_screen.at(0)->geometry();
-    control->setGeometry(0,rect.height()-90,rect.width(),90);
+    control->setGeometry(0,rect.height()-90,rect.width(),90);    
+    control->initslider();
     control->show();
-
     connect(control,&Control::shrink,this,&MainWindow::shrink);
     connect(ui->videowidget, &QVideoWidget_p::videoshrink, control, &Control::shrink_p);
     connect(ui->labelwidget, &QWidget_p::labelshrink, control, &Control::shrink_p);
@@ -712,7 +714,14 @@ QIcon MainWindow::sendplayORpauseButton()
 {
     return ui->playORpause->icon();
 }
-
+QString MainWindow::sendslider()
+{
+    return ui->labelDuration->text();
+}
+int MainWindow::sendposition()
+{
+    return ui->slider->sliderPosition();
+}
 //缩屏
 void MainWindow::shrink()
 {
