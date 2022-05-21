@@ -24,12 +24,17 @@ public:
     int mode_currentIndex();
     QIcon sendmuteButton();
     QIcon sendplayORpauseButton();
+    //qint64 sendDuration();
 
     QTimer *timer;
     QTimer *move;
 
 signals:
     void shrink();
+
+public slots:
+    //videowidget和labelwidget需要调用的函数
+    void shrink_p();
 
 private slots:
     void onTimeout();

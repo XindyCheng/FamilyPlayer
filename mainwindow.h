@@ -31,11 +31,10 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    int hasinMediaPlaylist(QString filename);
-    void highlight(int lastindex, int currentindex);
+    //媒体库相关
+    void highlight(int lastindex, int currentindex); //播放高亮
     void readPlaylist();
     void writePlaylist();
-
     //拖拽
     void dragEnterEvent(QDragEnterEvent *event);
     void dropEvent(QDropEvent *event);
@@ -51,6 +50,7 @@ public:
     QIcon sendplayORpauseButton();   //播放/暂停图标
 
 
+    void openslot();
     void playORpause(); //播放/暂停
     void previous();    //上一首
     void next();    //下一首
@@ -58,6 +58,10 @@ public:
     void fastforward();     //快进
     void playmode();     //播放模式
     void on_ratebox_Changed(int index);  //倍速
+    void update_Duration(qint64 currentInfo );
+    void duration_Changed(qint64 duration);
+    void position_Changed(qint64 progress);
+    void sliderMoved(int position);
 
 private slots:
     void actionOpenSlot();   //添加播放文件
@@ -98,7 +102,9 @@ private slots:
 
     void keyPressEvent(QKeyEvent *event);
 
-    void on_playlist_itemDoubleClicked(QListWidgetItem *item);
+    void on_playlist_itemDoubleClicked(QListWidgetItem *item); //双击
+
+    void on_playlist_customContextMenuRequested(const QPoint &pos); //右键显示媒体信息
 
     void closeEvent (QCloseEvent * e);    //退出
 
@@ -108,7 +114,12 @@ private slots:
 
     void shrink();  //接收小屏信号
 
+    void deleteitem();
+
+
+
 private:
+
     Ui::MainWindow *ui;
     QMediaPlayer *player;
     QVideoWidget *VideoWidget;
@@ -116,9 +127,12 @@ private:
 
     Control *control=nullptr;
 
+    QMediaPlayer *playerForMetadata;
+
     // 播放列表
     QStringList Playlist;
     int CurrentIndex;
+    QMenu *menu = NULL;
 
     qint64 duration;
 };
