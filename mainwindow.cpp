@@ -298,6 +298,17 @@ void MainWindow::deleteitem()
                              QMessageBox::Yes, QMessageBox::No)== QMessageBox::Yes)
     {
         int row=ui->playlist->currentRow();
+        if(player->source()==QUrl::fromLocalFile(this->Playlist[row]))
+        {
+
+            player->stop();
+            int next=0;
+            if(row!=this->Playlist.length()-1)
+                next=row+1;
+            player->setSource(QUrl::fromLocalFile(this->Playlist[next]));
+            highlight(row,next);
+            player->play();
+        }
         QListWidgetItem*item=ui->playlist->takeItem(row);
         delete item;
         this->Playlist.removeAt(row);
