@@ -272,6 +272,10 @@ void  Control::keyPressEvent(QKeyEvent *event)
         {
             on_volumeSlider_sliderMoved(ui->volumeSlider->value()-5);
         }
+        else if(event->key()==Qt::Key_I)
+        {
+            m_parent->openslot();
+        }
     }
 }
 
