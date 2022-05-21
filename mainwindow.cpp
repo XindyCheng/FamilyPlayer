@@ -801,9 +801,9 @@ void MainWindow::drawback()
 {
     QString str=ui->labelDuration->text();
     QStringList list=str.split("/");
-    if(ui->slider->value()-3000<0)
+    if(ui->slider->value()-2000<0)
         on_slider_sliderMoved(0);
-    else on_slider_sliderMoved(ui->slider->value()-3000);
+    else on_slider_sliderMoved(ui->slider->value()-2000);
 }
 //快进
 void MainWindow::fastforward()
@@ -816,9 +816,9 @@ void MainWindow::fastforward()
     {
         maxnum+=maxsum.at(i).toInt()*qPow(60,(maxsum.size()-i-1))*1000;
     }
-    if(maxnum <= ui->slider->value()+3000)
+    if(maxnum <= ui->slider->value()+2000)
         on_slider_sliderMoved(maxnum);
-    else on_slider_sliderMoved(ui->slider->value()+3000);
+    else on_slider_sliderMoved(ui->slider->value()+2000);
 }
 //倍速播放
 void MainWindow::on_ratebox_Changed(int index)
