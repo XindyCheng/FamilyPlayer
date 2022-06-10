@@ -12,11 +12,12 @@ Control::Control(QWidget *parent) :
 
     // 把传过来的父窗口类的指针强制类型转换
     m_parent = static_cast<MainWindow*>(parent);
+
     //音量、进度条设置与主屏幕相同
     set_volume(m_parent->sendvolume());
     ui->volumeSlider->setRange(0, 100);
     //视频进度条、播放模式、播放速率与主屏幕相同
-    ui->slider->setRange(0, m_parent->sendplayer()->duration());
+    ui->slider->setRange(0, m_parent->sendplayer()->get_duration());
     ui->playmode->setCurrentIndex(m_parent->mode_currentIndex());
     ui->ratebox->setCurrentIndex(m_parent->rate_currentIndex());
     //静音键、播放/暂停键与主屏幕相同
@@ -37,18 +38,18 @@ Control::Control(QWidget *parent) :
     move->start(100);
 
     //player状态切换信号（换播放/暂停图标）
-    connect(m_parent->sendplayer(), &QMediaPlayer::playbackStateChanged, this, &Control::playbackstatechange);
+    connect(m_parent->sendplayer(), &Player::playbackStateChanged, this, &Control::playbackstatechange);
 
     //音量变化信号
     connect(m_parent->sendaudio(), &QAudioOutput::volumeChanged, this, &Control::set_volume);
 
     //视频时长信号变化
-    connect(m_parent->sendplayer(), &QMediaPlayer::durationChanged, this, &Control::durationChanged);
+    connect(m_parent->sendplayer(), &Player::durationChanged, this, &Control::durationChanged);
     //播放进度信号变化
-    connect(m_parent->sendplayer(), &QMediaPlayer::positionChanged, this, &Control::positionChanged);
+    connect(m_parent->sendplayer(), &Player::positionChanged, this, &Control::positionChanged);
 
     //播完时判断当前播放模式
-    connect(m_parent->sendplayer(), &QMediaPlayer::mediaStatusChanged, this, &Control::about_to_finish);
+    connect(m_parent->sendplayer(), &Player::mediaStatusChanged, this, &Control::about_to_finish);
 }
 
 Control::~Control()
@@ -114,11 +115,11 @@ QIcon Control::sendplayORpauseButton()
 
 //播放状态图标切换
 void Control::playbackstatechange(){
-    if(m_parent->sendplayer()->playbackState()==m_parent->sendplayer()->PlayingState){
+    if(m_parent->sendplayer()->isPlaying()){
         ui->playORpause->setIcon(QPixmap(":/images/button-pause.PNG"));
         ui->playORpause->setToolTip("暂停");
     }
-    else if(m_parent->sendplayer()->playbackState()==m_parent->sendplayer()->PausedState){
+    else if(m_parent->sendplayer()->isPaused()){
         ui->playORpause->setIcon(QPixmap(":/images/button-play.PNG"));
         ui->playORpause->setToolTip("播放");
     }
@@ -211,7 +212,6 @@ void Control::set_volume(float volume)
     change_Volumeicon(position);
     ui->volumeNum->setText(QString::number(position+1,10));
 }
-
 void Control::initslider()
 {
     ui->labelDuration->setText(m_parent->sendslider());
@@ -231,14 +231,14 @@ void Control::updateDurationInfo(qint64 currentInfo)
         if (duration > 3600)
             format = "hh:mm:ss";
         tStr = currentTime.toString(format) + " / " + totalTime.toString(format);
-    }    
+    }
     ui->labelDuration->setText(tStr);
 }
 
 //视频时长变化
 void Control::durationChanged(qint64 p_duration)
 {
-    //duration=p_duration/1000;
+    duration = p_duration / 1000;
     ui->slider->setMaximum(p_duration);
 }
 
@@ -271,10 +271,6 @@ void  Control::keyPressEvent(QKeyEvent *event)
         else if(event->key()==Qt::Key_Down)
         {
             on_volumeSlider_sliderMoved(ui->volumeSlider->value()-5);
-        }
-        else if(event->key()==Qt::Key_I)
-        {
-            m_parent->openslot();
         }
     }
 }

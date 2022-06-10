@@ -24,11 +24,10 @@ public:
     int mode_currentIndex();
     QIcon sendmuteButton();
     QIcon sendplayORpauseButton();
-    void initslider();
 
     QTimer *timer;
     QTimer *move;
-
+    void initslider();
 
 signals:
     void shrink();
@@ -83,9 +82,9 @@ private:
 
     MainWindow *m_parent;
 
+
+
     qint64 duration;
-
-
 
     int mouse_x;
     int mouse_y;

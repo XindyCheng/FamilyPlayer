@@ -5,7 +5,8 @@ QVideoWidget_p::QVideoWidget_p(QWidget *parent)
 {
     setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
     setMouseTracking(true);
-    installEventFilter(this);
+    timer = new QTimer(this);
+    connect(timer, SIGNAL(timeout()), this, SLOT(mouseClick()));
 
 #ifndef Q_OS_ANDROID // QTBUG-95723
     setAttribute(Qt::WA_OpaquePaintEvent);
@@ -15,31 +16,36 @@ QVideoWidget_p::QVideoWidget_p(QWidget *parent)
 void QVideoWidget_p::keyPressEvent(QKeyEvent *event)
 {
     if ((event->key() == Qt::Key_Escape) && isFullScreen()) {
-        setFullScreen(false);
+        emit videoshrink();
     }
 }
 
 void QVideoWidget_p::mouseDoubleClickEvent(QMouseEvent *event)
 {
-    setFullScreen(!isFullScreen());
+    timer->stop();
+    if(isFullScreen())
+    {
+        emit videoshrink();
+    }
+    else
+    {
+        emit videosetFullScreen();
+    }
     event->accept();
 }
 
-void QVideoWidget_p::mouseMoveEvent(QMouseEvent *event)
+void QVideoWidget_p::mousePressEvent(QMouseEvent *event)
 {
-    emit mousemove();
-    qDebug()<<"m1";
+    emit videoclearFocus();
+    timer->start(300);
+    event->accept();
 }
 
-bool QVideoWidget_p::eventFilter(QObject *o, QEvent *e)
+void QVideoWidget_p::mouseClick()
 {
-    if ((o == this) && (e->type() == QEvent::HoverMove))
-    {
-            emit mousemove();
-            qDebug()<<"m2";
-            return true;
-    }
-    return QVideoWidget::eventFilter(o,e);
+    timer->stop();
+    emit videomouseClick();
 }
+
 
 

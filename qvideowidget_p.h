@@ -3,6 +3,7 @@
 
 #include <QVideoWidget>
 #include <QKeyEvent>
+#include <QTimer>
 
 class QVideoWidget_p : public QVideoWidget
 {
@@ -11,13 +12,19 @@ public:
     explicit QVideoWidget_p(QWidget *parent = nullptr);
 
 signals:
-    void mousemove();
+    void videomouseClick();
+    void videosetFullScreen();
+    void videoshrink();
+    void videoclearFocus();
 
-protected:
+private slots:
     void keyPressEvent(QKeyEvent *event) override;
     void mouseDoubleClickEvent(QMouseEvent *event) override;
-    void mouseMoveEvent(QMouseEvent *event) override;
-    bool eventFilter(QObject *o, QEvent *e) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseClick();
+
+private:
+    QTimer *timer;
 
 };
 

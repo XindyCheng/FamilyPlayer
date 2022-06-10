@@ -1,56 +1,55 @@
+#pragma execution_character_set("utf-8")
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-# include <QDebug>
-//#include <QFileInfo>
+#include "dialog.h"
+#include <QDebug>
 #include <QMediaMetaData>
-#include<QMovie>
+#include <QMovie>
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::MainWindow)
+    : FramelessMainWindow(parent), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    player = new QMediaPlayer;
+    this->initForm();
     playerForMetadata = new QMediaPlayer;
-    //播放窗口
-    player->setVideoOutput(ui->videowidget);
 
-    //默认声音
     AudioOutput = new QAudioOutput;
-    player->setAudioOutput(AudioOutput);
+    player = new Player(AudioOutput,ui->videowidget);
+    //播放列表
+    this->FileWatcher=new QFileSystemWatcher();
+    connect(FileWatcher, &QFileSystemWatcher::fileChanged, this, &MainWindow::on_fileChanged);
+    CurrentIndex = -1;
+    showPlaylist();    //载入之前的播放列表
+    this->setAcceptDrops(true);
+    ui->playlist->setAcceptDrops(true);    //接受拖拽事件
+
 
     //音量进度条设置
     setVolume(AudioOutput->volume());
     ui->volumeSlider->setRange(0, 100);
-    ui->slider->setRange(0, player->duration());
+    ui->slider->setRange(0, player->get_duration());
 
     //设置默认播放速率
     ui->ratebox->setCurrentIndex(1);
 
-    //播放列表
-    CurrentIndex = -1;
-    readPlaylist();    //载入之前的播放列表
-    this->setAcceptDrops(true);
-    ui->playlist->setAcceptDrops(true);    //接受拖拽事件
-
-    ui->labelwidget->hide();
-
-    //菜单栏-添加
-    connect(ui->actionopenfile,SIGNAL(triggered()),this,SLOT(actionOpenSlot()));
+    ui->videowidget->hide();
+    ui->labelwidget->show();
+    ui->label->setPixmap(QPixmap(":/images/player.png"));
 
     //视频时长信号变化
-    connect(player, &QMediaPlayer::durationChanged, this, &MainWindow::durationChanged);
+    connect(player, &Player::durationChanged, this, &MainWindow::durationChanged);
     //播放进度信号变化
-    connect(player, &QMediaPlayer::positionChanged, this, &MainWindow::positionChanged);
+    connect(player, &Player::positionChanged, this, &MainWindow::positionChanged);
+    //播完时判断当前播放模式
+    connect(player, &Player::mediaStatusChanged, this, &MainWindow::about_to_finish);
+    //player状态切换信号（换播放/暂停图标）
+    connect(player, &Player::playbackStateChanged, this, &MainWindow::playbackstatechange);
+    //媒体数据切换
+    connect(player, &Player::metaDataChanged, this, &MainWindow::metadatachange);
+
     //音量变化信号
     connect(AudioOutput, &QAudioOutput::volumeChanged, this, &MainWindow::setVolume);
-
-    //播完时判断当前播放模式
-    connect(player, &QMediaPlayer::mediaStatusChanged, this, &MainWindow::about_to_finish);
-
-    //player状态切换信号（换播放/暂停图标）
-    connect(player, &QMediaPlayer::playbackStateChanged, this, &MainWindow::playbackstatechange);
-    //媒体数据切换
-    connect(player, &QMediaPlayer::metaDataChanged, this, &MainWindow::metadatachange);
 
     //videowidget
     connect(ui->videowidget, &QVideoWidget_p::videomouseClick, this, &MainWindow::playORpause);
@@ -68,11 +67,58 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::initForm()
+{
+    //设置标题栏控件
+    ui->labTitle->setText("FamilyPlayer");
+    this->setWindowTitle(ui->labTitle->text());
+    this->setTitleBar(ui->labTitle);
+
+    //关联信号
+    connect(this, SIGNAL(titleDblClick()), this, SLOT(titleDblClick()));
+    connect(this, SIGNAL(windowStateChange(bool)), this, SLOT(windowStateChange(bool)));
+
+}
+
+void MainWindow::titleDblClick()
+{
+    on_btnMenu_Max_clicked();
+}
+
+void MainWindow::windowStateChange(bool max)
+{
+    ui->btnMenu_Max->setIcon(max ? QPixmap(":/images/arrows-shrink.PNG"): QPixmap(":/images/arrows-expand.PNG"));
+    ui->btnMenu_Max->setToolTip(max ? "还原" : "最大");
+}
+
+void MainWindow::on_btnMenu_Min_clicked()
+{
+    this->showMinimized();
+}
+
+void MainWindow::on_btnMenu_Max_clicked()
+{
+    if (this->isMaximized()) {
+        this->showNormal();
+        ui->btnMenu_Max->setIcon(QPixmap(":/images/arrows-expand.PNG"));
+        ui->btnMenu_Max->setToolTip("最大化");
+    } else {
+        this->showMaximized();
+        ui->btnMenu_Max->setIcon(QPixmap(":/images/arrows-shrink.PNG"));
+        ui->btnMenu_Max->setToolTip("还原");
+    }
+}
+
+void MainWindow::on_btnMenu_Close_clicked()
+{
+    this->close();
+}
+
 //退出
 void MainWindow::closeEvent (QCloseEvent * e){
     if(QMessageBox::question(this,tr("退出"),tr("您确定要退出吗？"),
                              QMessageBox::Yes, QMessageBox::No)== QMessageBox::Yes){
-        writePlaylist();
+        player->write_memory();
         e->accept();//不会将事件传递给组件的父组件
     }
     else  e->ignore();
@@ -81,7 +127,7 @@ void MainWindow::closeEvent (QCloseEvent * e){
 
 //播放状态切换
 void MainWindow::playbackstatechange(){
-    if(player->playbackState()==player->PlayingState){
+    if(player->isPlaying()){
         ui->playORpause->setIcon(QPixmap(":/images/button-pause.PNG"));
         ui->playORpause->setToolTip("暂停");
     }
@@ -93,15 +139,15 @@ void MainWindow::playbackstatechange(){
 
 //媒体数据切换，封面重绘
 void MainWindow::metadatachange(){
-    if(this->player->metaData().isEmpty())
+    if(this->player->metaData_isEmpty())
     {
         return;
     }
     //有封面
-    if(this->player->metaData().value(QMediaMetaData::ThumbnailImage).isValid()){
+    if(this->player->thumbnailImage_isValid()){
 
         ui->labelwidget->show();
-        QImage pic = this->player->metaData().value(QMediaMetaData::ThumbnailImage).value<QImage>();
+        QImage pic = this->player->get_thumbnailImage();
         QImage dest=pic.scaled(ui->labelwidget->size(),Qt::KeepAspectRatio);
         ui->label->setPixmap(QPixmap::fromImage(dest));
 
@@ -126,7 +172,6 @@ void MainWindow::metadatachange(){
     }
     //无封面
      else{
-
          if(ui->labelwidget->isFullScreen()||ui->videowidget->isFullScreen()){
              if(ui->labelwidget->isFullScreen()){
                  ui->labelwidget->setWindowFlags(Qt::SubWindow);
@@ -151,43 +196,16 @@ void MainWindow::metadatachange(){
 
 //媒体库
 //读取文件
-void MainWindow::readPlaylist(){
-    QFile file("./playlist.txt");
-    if(!file.exists()){
-        qDebug()<<"playlist文件不存在，创建文件";
-        file.open(QIODevice::ReadOnly | QIODevice::Text);
-        file.close();
+void MainWindow::showPlaylist(){
+    if(!player->init_list()){
+        QMessageBox::warning(this, "提示", player->get_list_error());
     }
-    else{
-        file.open(QIODevice::ReadOnly | QIODevice::Text);
-        QString filename;
-        while (!file.atEnd()){
-            filename = file.readLine();
-            filename= filename.trimmed();
-            if(filename == "") break;
-            qDebug()<<filename;
-            if(QFile::exists(filename)){
-                this->Playlist.append(filename);
-                ui->playlist->addItem(QFileInfo(filename).fileName());
-            }
-            else{
-                QString hint="文件"+filename+"不存在或已被移动";
-                QMessageBox::warning(this, "提示", hint);
-            }
-        }
+    int i = 0;
+    while(i < player->list_length()){
+        ui->playlist->addItem(QFileInfo(player->get_listItem(i)).fileName());
+        this->FileWatcher->addPath(player->get_listItem(i));
+        i++;
     }
-}
-
-//写入文件
-void MainWindow::writePlaylist(){
-    QFile file("./playlist.txt");
-    file.open(QIODevice::WriteOnly | QIODevice::Text);
-    QString res="";
-    for(int i=0;i<this->Playlist.length();i++){
-        res = this->Playlist[i]+'\n';
-        file.write(res.toUtf8());
-    }
-    file.close();
 }
 
 //高亮
@@ -198,45 +216,35 @@ void MainWindow::highlight(int lastindex, int currentindex){
     ui->playlist->setCurrentRow(currentindex);
 }
 
-//添加到媒体库
-void MainWindow::actionOpenSlot()
+void MainWindow::add_file(QString filename)
 {
-    QFileDialog fileDialog(this);
-    fileDialog.setDirectory(QStandardPaths::standardLocations(QStandardPaths::DesktopLocation).value(0, QDir::homePath()));
-
-    QString filename = fileDialog.getOpenFileName();
-    qDebug()<<filename;
     if(filename == "") return;
-    //int lastindex = this->CurrentIndex;
-
-    int currentIndex = this->Playlist.indexOf(filename); //Playlist中是否已有该文件
-    if(this->Playlist.length()==0)
-    {
-        this->CurrentIndex=this->Playlist.length();
-        this->Playlist.append(filename);
+    if(player->add_file(filename)==1){
         ui->playlist->addItem(QFileInfo(filename).fileName());
+        this->FileWatcher->addPath(filename);
     }
-    else if(currentIndex == -1){   //没有在Playlist中
-        //this->CurrentIndex = this->Playlist.length();
-        this->Playlist.append(filename);
-        ui->playlist->addItem(QFileInfo(filename).fileName());
-    }
-    else
-    {
+    else{
         static bool isshow_flag = false;
+        if(player->add_file(filename)==0){
             if (!isshow_flag) {
-                isshow_flag = true;
-                QMessageBox box;
-                box.setText("该音频/视频已在播放列表中！");//设置显示文本
-                box.setWindowTitle("添加音频/视频");//设置弹窗标题
-                box.exec();
-                isshow_flag = false;
+                    isshow_flag = true;
+                    QMessageBox box;
+                    box.setText("该音频/视频已在播放列表中！");//设置显示文本
+                    box.setWindowTitle("添加音频/视频");//设置弹窗标题
+                    box.exec();
+                    isshow_flag = false;
+            }
+        }else{
+            if (!isshow_flag) {
+                    isshow_flag = true;
+                    QMessageBox box;
+                    box.setText("该资源不是可播放资源！");//设置显示文本
+                    box.setWindowTitle("添加音频/视频");//设置弹窗标题
+                    box.exec();
+                    isshow_flag = false;
+            }
         }
     }
-    //highlight(lastindex, this->CurrentIndex);
-    //player->setSource(QUrl::fromLocalFile(filename));
-    //player->play();
-
 }
 
 void MainWindow::dragEnterEvent(QDragEnterEvent *event){
@@ -247,38 +255,20 @@ void MainWindow::dropEvent(QDropEvent *event){
     const QMimeData *qm = event->mimeData();
     QString filename = qm->urls()[0].toLocalFile();
     qDebug()<<filename;
+    add_file(filename);
 
-    if(filename == "") return;
-    //int lastindex = this->CurrentIndex;
-    int currentIndex = this->Playlist.indexOf(filename);  //Playlist中是否已有该文件
-    if(this->Playlist.length()==0)
-    {
-        this->CurrentIndex=this->Playlist.length();
-        this->Playlist.append(filename);
-        ui->playlist->addItem(QFileInfo(filename).fileName());
-    }
-    else if(currentIndex == -1){   //没有在Playlist中
-        //this->CurrentIndex = this->Playlist.length();
-        this->Playlist.append(filename);
-        ui->playlist->addItem(QFileInfo(filename).fileName());
-    }
-    else
-    {
-        static bool isshow_flag = false;
-            if (!isshow_flag) {
-                isshow_flag = true;
-                QMessageBox box;
-                box.setText("该音频/视频已在播放列表中！");//设置显示文本
-                box.setWindowTitle("添加音频/视频");//设置弹窗标题
-                box.exec();
-                isshow_flag = false;
-        }
-    }
-    /*
-    highlight(lastindex, this->CurrentIndex);
-    player->setSource(QUrl::fromLocalFile(filename));
-    player->play();
-*/
+
+}
+//文件移动
+void MainWindow::on_fileChanged(const QString &path)
+{
+    QString hint="文件"+path+"不存在或已被移动";
+    QMessageBox::warning(this, "提示", hint);
+    this->FileWatcher->removePath(path);
+    int i = player->get_listIndex(path);
+    QListWidgetItem *item=ui->playlist->takeItem(i);
+    delete item;
+    player->remove_file(i);;
 }
 
 //双击播放列表中某一项
@@ -287,38 +277,55 @@ void MainWindow::on_playlist_itemDoubleClicked(QListWidgetItem *item)
     int lastindex = this->CurrentIndex;
     this->CurrentIndex=item->listWidget()->currentRow();
     highlight(lastindex, this->CurrentIndex);
-    player->setSource(QUrl::fromLocalFile(this->Playlist[this->CurrentIndex]));
-    player->play();
-    //qDebug()<<duration;
-
+    player->play(CurrentIndex);
 
 }
 //删除选中音视频
 void MainWindow::deleteitem()
 {
-    if(QMessageBox::question(this,tr("删除"),tr("您确定要删除吗？"),
+    if(player->list_length()==0) return;
+    int row=ui->playlist->currentRow();
+    QString question = "您确定要将"+this->player->get_listItem(row)+"移出播放列表吗？";
+    if(QMessageBox::question(this,tr("删除"), question,
                              QMessageBox::Yes, QMessageBox::No)== QMessageBox::Yes)
     {
-        int row=ui->playlist->currentRow();
-        if(player->source()==QUrl::fromLocalFile(this->Playlist[row]))
-        {
-
-            player->stop();
-            int next=0;
-            if(row!=this->Playlist.length()-1)
-                next=row+1;
-            player->setSource(QUrl::fromLocalFile(this->Playlist[next]));
-            highlight(row,next);
-            player->play();
-        }
-        QListWidgetItem*item=ui->playlist->takeItem(row);
+        QListWidgetItem *item=ui->playlist->takeItem(row);
         delete item;
-        this->Playlist.removeAt(row);
+        this->FileWatcher->removePath(player->get_listItem(row));
+        if(this->CurrentIndex==row){
+            player->stop();
+            ui->videowidget->hide();
+            ui->labelwidget->show();
+            ui->label->setPixmap(QPixmap(":/images/player.png"));
+        }
+        player->remove_file(row);
     }
     else{
         return;
     }
 
+}
+//清空列表
+void MainWindow::on_deleteallButton_clicked()
+{
+    if(QMessageBox::question(this,tr("删除"),tr("您确定要清空播放列表吗？"),
+                             QMessageBox::Yes, QMessageBox::No) == QMessageBox::Yes)
+    {
+        int len=player->list_length();
+        for(int i=0;i<len;i++){
+            this->FileWatcher->removePath(player->get_listItem(0));
+            player->remove_file(0);
+        }
+        ui->playlist->clear();
+
+        player->stop();
+        ui->videowidget->hide();
+        ui->labelwidget->show();
+        ui->label->setPixmap(QPixmap(":/images/player.png"));
+    }
+    else{
+        return;
+    }
 }
 //右键单击媒体库列表文件，显示媒体信息
 void MainWindow::on_playlist_customContextMenuRequested(const QPoint &pos)
@@ -331,19 +338,29 @@ void MainWindow::on_playlist_customContextMenuRequested(const QPoint &pos)
            delete menu;
            menu = NULL;
      }
+    menu = new QMenu(this);
 
+    QAction *Metadata = new QAction("查看媒体信息",this);
+    QAction *Delete = new QAction("删除",this);//删除选中音视频
+    menu->addAction(Metadata);
+    menu->addAction(Delete);
+
+    connect(Metadata,&QAction::triggered,this,&MainWindow::metadataDialog);
+    connect(Delete,&QAction::triggered,this,&MainWindow::deleteitem);
+
+    menu->exec(QCursor::pos());
+}
+
+QStringList MainWindow::getMetaData(){
     int i=ui->playlist->currentRow();
-    //qDebug()<<i;
-    //qDebug()<<this->Playlist[index];
-    playerForMetadata->setSource(QUrl::fromLocalFile(this->Playlist[i]));
-    //qDebug()<<playerForMetadata->mediaStatus();
+    playerForMetadata->setSource(QUrl::fromLocalFile(player->get_listItem(i)));
     while(playerForMetadata->mediaStatus()==QMediaPlayer::LoadingMedia){
         QEventLoop loop;
         QTimer::singleShot(50,&loop,SLOT(quit()));
         loop.exec();
     }
 
-    QString Filename = QFileInfo(this->Playlist[i]).fileName();
+    QString Filename = QFileInfo(player->get_listItem(i)).fileName();
     QString VideoBitRate = playerForMetadata->metaData().stringValue(QMediaMetaData::VideoBitRate);
     QString VideoFrameRate = playerForMetadata->metaData().stringValue(QMediaMetaData::VideoFrameRate);
     QString VideoCodec = playerForMetadata->metaData().stringValue(QMediaMetaData::VideoCodec);
@@ -353,113 +370,49 @@ void MainWindow::on_playlist_customContextMenuRequested(const QPoint &pos)
     QString AlbumTitle = playerForMetadata->metaData().stringValue(QMediaMetaData::AlbumTitle);
     QString Author = playerForMetadata->metaData().stringValue(QMediaMetaData::Author);
 
-    menu = new QMenu(this);
-    QAction *filename = new QAction("文件名： "+Filename, this);
-    QAction *videoBitRate = new QAction("视频码率： "+VideoBitRate, this);
-    QAction *videoFrameRate = new QAction("视频帧率： "+VideoFrameRate, this);
-    QAction *videoCodec = new QAction("视频编码方式： "+VideoCodec, this);
-    QAction *audioBitRate = new QAction("音频码率： "+AudioBitRate, this);
-    QAction *audioCodec = new QAction("音频编码方式： "+AudioCodec, this);
-    QAction *trackNumber = new QAction("音频声道数： "+TrackNumber, this);
-    QAction *albumTitle = new QAction("专辑标题： "+AlbumTitle, this);
-    QAction *author = new QAction("演唱者： "+Author, this);
-    QAction *Delete = new QAction("删除",this);//删除选中音视频
+    QStringList MetaData;
+    MetaData.append(Filename);
+    MetaData.append(VideoBitRate);
+    MetaData.append(VideoFrameRate);
+    MetaData.append(VideoCodec);
+    MetaData.append(AudioBitRate);
+    MetaData.append(AudioCodec);
+    MetaData.append(TrackNumber);
+    MetaData.append(AlbumTitle);
+    MetaData.append(Author);
+    return MetaData;
+}
 
-    menu->addAction(filename);
-    menu->addAction(videoBitRate);
-    menu->addAction(videoFrameRate);
-    menu->addAction(videoCodec);
-    menu->addAction(audioBitRate);
-    menu->addAction(audioCodec);
-    menu->addAction(trackNumber);
-    menu->addAction(albumTitle);
-    menu->addAction(author);
-    menu->addAction(Delete);
-
-    connect(Delete,&QAction::triggered,this,&MainWindow::deleteitem);
-
-    menu->exec(QCursor::pos());
+void MainWindow::metadataDialog()
+{
+    Dialog dialog;
+    dialog.setList(this->getMetaData());
+    dialog.exec();
 }
 
 //控件
 //播放/暂停键
 void MainWindow::on_playORpause_clicked()
 {
-    if(player->playbackState()==player->PlayingState){
-        player->pause();
-
-    }else{
-        if(player->playbackState()==player->PausedState){
-            player->play();
-        }
-    }
+    this->playORpause();
 }
 
 //上一首
 void MainWindow::on_previousButton_clicked()
 {
-    int playrow=this->Playlist.count();//播放列表总长度
-    int state=0;//表示初始状态为播放还是暂停，初始值为0，表示处于暂停状态
-    //如果当前处于播放状态，先暂停播放，state=1
-    if(player->playbackState()==player->PlayingState)
-    {
-        player->pause();
-        state=1;
-    }
-    //当前播放的不是第一首
-    if(this->CurrentIndex>0)
-    {
-        int lastindex=this->CurrentIndex;
-        this->CurrentIndex=this->CurrentIndex-1;
-        highlight(lastindex,this->CurrentIndex);
-        player->setSource(QUrl::fromLocalFile(this->Playlist[this->CurrentIndex]));
-    }
-    else
-    {
-        int lastindex=this->CurrentIndex;
-        this->CurrentIndex=playrow-1;//跳到列表最后一首
-        highlight(lastindex,this->CurrentIndex);
-        player->setSource(QUrl::fromLocalFile(this->Playlist[this->CurrentIndex]));
-    }
-    if(state==0)player->pause();
-    else if(state==1)player->play();
-
+    this->previous();
 }
 
 //下一首
 void MainWindow::on_nextButton_clicked()
 {
-    int playrow=this->Playlist.count();
-    int state=0;//表示初始状态为播放还是暂停，初始值为0，表示处于暂停状态
-    //如果当前处于播放状态，先暂停播放，state=1
-    if(player->playbackState()==player->PlayingState)
-    {
-        state=1;
-        player->pause();
-    }
-    //当前播放的不是最后一首
-    if(this->CurrentIndex<playrow-1)
-    {
-        int lastindex=this->CurrentIndex;
-        this->CurrentIndex=this->CurrentIndex+1;
-        highlight(lastindex,this->CurrentIndex);
-        player->setSource(QUrl::fromLocalFile(this->Playlist[this->CurrentIndex]));
-    }
-    else
-    {
-        int lastindex=this->CurrentIndex;
-        this->CurrentIndex=0;//跳到列表第一首
-        highlight(lastindex,this->CurrentIndex);
-        player->setSource(QUrl::fromLocalFile(this->Playlist[this->CurrentIndex]));
-    }
-    if(state==0)player->pause();
-    else if(state==1)player->play();
+   this->next();
 }
 
 //实时显示已播放时长
 void MainWindow::updateDurationInfo(qint64 currentInfo)
 {
-    QString tStr;    
+    QString tStr;
     if (currentInfo || duration) {
         QTime currentTime((currentInfo / 3600) % 60, (currentInfo / 60) % 60,
             currentInfo % 60, (currentInfo * 1000) % 1000);
@@ -498,28 +451,13 @@ void MainWindow::on_slider_sliderMoved(int position)
 //进度快退按钮
 void MainWindow::on_drawbackButton_clicked()
 {
-
-    QString str=ui->labelDuration->text();
-    QStringList list=str.split("/");
-    if(ui->slider->value()-2000<0)
-        on_slider_sliderMoved(0);
-    else on_slider_sliderMoved(ui->slider->value()-2000);
+    this->drawback();
 }
 
 //进度快进按钮
 void MainWindow::on_fastforwardButton_clicked()
 {
-    QString str=ui->labelDuration->text();
-    QStringList list=str.split("/");
-    QStringList maxsum=list.at(1).split(":");
-    int maxnum=0;
-    for(int i=maxsum.size()-1;i>=0;i--)
-    {
-        maxnum+=maxsum.at(i).toInt()*qPow(60,(maxsum.size()-i-1))*1000;
-    }
-    if(maxnum <= ui->slider->value()+2000)
-        on_slider_sliderMoved(maxnum);
-    else on_slider_sliderMoved(ui->slider->value()+2000);
+    this->fastforward();
 }
 
 //静音切换
@@ -533,7 +471,7 @@ void MainWindow::on_muteButton_clicked()
 //全屏显示
 void MainWindow::on_fullScreenButton_clicked()
 {
-    if(this->player->metaData().value(QMediaMetaData::ThumbnailImage).isValid()){
+    if(this->player->thumbnailImage_isValid()){
         ui->labelwidget->setWindowFlags(Qt::Window);
         ui->labelwidget->showFullScreen();
     }
@@ -542,9 +480,10 @@ void MainWindow::on_fullScreenButton_clicked()
     control = new Control(this);
     QList<QScreen *> list_screen =  QGuiApplication::screens();  //多显示器
     QRect rect = list_screen.at(0)->geometry();
-    control->setGeometry(0,rect.height()-90,rect.width(),90);    
+    control->setGeometry(0,rect.height()-95,rect.width(),95);
     control->initslider();
     control->show();
+
     connect(control,&Control::shrink,this,&MainWindow::shrink);
     connect(ui->videowidget, &QVideoWidget_p::videoshrink, control, &Control::shrink_p);
     connect(ui->labelwidget, &QWidget_p::labelshrink, control, &Control::shrink_p);
@@ -610,71 +549,45 @@ void MainWindow:: keyPressEvent(QKeyEvent *event)
 //播放模式
 void MainWindow::about_to_finish()
 {
-    if(player->mediaStatus()!=player->EndOfMedia){
+    if(!player->isEnd()){
         return;
     }
-    int combox_index = ui->playmode->currentIndex();
-    int lastindex;
-    switch(combox_index){
-    case 0:{    //单曲播放
-        break;
+    int next_index = player->next(ui->playmode->currentIndex());
+    if(next_index != -1){
+        highlight(this->CurrentIndex, next_index);
+        this->CurrentIndex = next_index;
     }
 
-    case 1:{    //顺序播放
-        lastindex = this->CurrentIndex;
-        this->CurrentIndex = (this->CurrentIndex+1)%(this->Playlist.length());
-        player->setSource(QUrl::fromLocalFile(this->Playlist[this->CurrentIndex]));
-        highlight(lastindex, this->CurrentIndex);
-        player->play();
-        break;
-    }
-
-    case 2:{    //随机播放
-        lastindex = this->CurrentIndex;
-        srand(QTime(0,0,0).secsTo(QTime::currentTime()));
-        this->CurrentIndex = rand()%(this->Playlist.length());
-        player->setSource(QUrl::fromLocalFile(this->Playlist[this->CurrentIndex]));
-        highlight(lastindex, this->CurrentIndex); player->play();
-        break;
-    }
-
-    case 3:{    //单曲循环
-        player->setSource(QUrl::fromLocalFile(this->Playlist[this->CurrentIndex]));
-        player->play();
-        break;
-    }
-    }
 }
 
 //倍速播放
 void MainWindow::on_ratebox_currentIndexChanged(int index)
 {
-    switch(index)
-    {
-        case 0:
-            player->setPlaybackRate(0.5);
-            break;
-        case 1:
-            player->setPlaybackRate(1.0);
-            break;
-        case 2:
-            player->setPlaybackRate(1.5);
-            break;
-        case 3:
-            player->setPlaybackRate(2.0);
-            break;
-    }
+    player->rateChange(index);
 }
 
 void MainWindow::paintEvent(QPaintEvent *event)
 {
     ui->label->resize(ui->labelwidget->size());
 }
+void MainWindow::on_addButton_clicked()
+{
+    QFileDialog fileDialog(this);
+    fileDialog.setDirectory(QStandardPaths::standardLocations(QStandardPaths::DesktopLocation).value(0, QDir::homePath()));
+    QString filename = fileDialog.getOpenFileName();
+    qDebug()<<filename;
+    add_file(filename);
 
+}
+
+void MainWindow::on_deleteButton_clicked()
+{
+    deleteitem();
+}
 
 //悬浮窗中要调用的函数
 //传递重要参数到control中
-QMediaPlayer* MainWindow::sendplayer()
+Player* MainWindow::sendplayer()
 {
     return player;
 }
@@ -694,7 +607,14 @@ qint64 MainWindow::sendDuration()
 {
     return duration;
 }
-
+QString MainWindow::sendslider()
+{
+    return ui->labelDuration->text();
+}
+int MainWindow::sendposition()
+{
+    return ui->slider->sliderPosition();
+}
 int MainWindow::rate_currentIndex()
 {
     return ui->ratebox->currentIndex();
@@ -714,14 +634,7 @@ QIcon MainWindow::sendplayORpauseButton()
 {
     return ui->playORpause->icon();
 }
-QString MainWindow::sendslider()
-{
-    return ui->labelDuration->text();
-}
-int MainWindow::sendposition()
-{
-    return ui->slider->sliderPosition();
-}
+
 //缩屏
 void MainWindow::shrink()
 {
@@ -744,58 +657,23 @@ void MainWindow::shrink()
 }
 //播放暂停
 void MainWindow::playORpause(){
-    if(player->playbackState()==player->PlayingState){
-        player->pause();
-    }else{
-        if(player->playbackState()==player->PausedState){
-            player->play();
-        }
-    }
+    player->playORpause();
 }
+
 //上一首
 void MainWindow::previous(){
-    player->pause();
-    int playrow=this->Playlist.count();//播放列表总长度
-    //当前播放的不是第一首
-    if(this->CurrentIndex>0)
-    {
-        int lastindex=this->CurrentIndex;
-        this->CurrentIndex=this->CurrentIndex-1;
-        highlight(lastindex,this->CurrentIndex);
-        player->setSource(QUrl::fromLocalFile(this->Playlist[this->CurrentIndex]));
-    }
-    else
-    {
-        int lastindex=this->CurrentIndex;
-        this->CurrentIndex=playrow-1;//跳到列表最后一首
-        highlight(lastindex,this->CurrentIndex);
-        player->setSource(QUrl::fromLocalFile(this->Playlist[this->CurrentIndex]));
-    }
-    player->play();
+    int next_index = player->previous();
+    highlight(this->CurrentIndex, next_index);
+    this->CurrentIndex = next_index;
 }
-//下一首
-void MainWindow::next(){
-    int playrow=this->Playlist.count();
 
-    player->pause();
-    //当前播放的不是最后一首
-    if(this->CurrentIndex<playrow-1)
-    {
-        int lastindex=this->CurrentIndex;
-        this->CurrentIndex=this->CurrentIndex+1;
-        highlight(lastindex,this->CurrentIndex);
-        player->setSource(QUrl::fromLocalFile(this->Playlist[this->CurrentIndex]));
-        player->play();
-    }
-    else
-    {
-        int lastindex=this->CurrentIndex;
-        this->CurrentIndex=0;//跳到列表第一首
-        highlight(lastindex,this->CurrentIndex);
-        player->setSource(QUrl::fromLocalFile(this->Playlist[this->CurrentIndex]));
-        player->play();
-    }
+//下一首
+void MainWindow::next(){   
+    int next_index = player->next(1);
+    highlight(this->CurrentIndex, next_index);
+    this->CurrentIndex = next_index;
 }
+
 //快退
 void MainWindow::drawback()
 {
@@ -828,9 +706,10 @@ void MainWindow::on_ratebox_Changed(int index)
 //播放模式
 void MainWindow::playmode()
 {
+    if(ui->labelwidget->isFullScreen()||ui->videowidget->isFullScreen())
+        ui->playmode->setCurrentIndex(control->mode_currentIndex());
     return about_to_finish();
 }
-void MainWindow::openslot()
-{
-    return actionOpenSlot();
-}
+
+
+

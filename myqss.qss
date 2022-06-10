@@ -1,14 +1,14 @@
 
-QMainWindow {
+#widgetMain {
     border: 2px solid rgb(232,232,237);
-    border-top-left-radius:0px;
-    border-top-right-radius:0px;
-    border-bottom-left-radius:20px;
-    border-bottom-right-radius:20px;
-
     background-color:rgb(85,85,127);
 
 }
+
+#titleBar {
+    background:rgb(48,48,71);
+}
+
 QMenuBar{
     border: 2px solid rgb(232,232,237);
     border-top-left-radius:20px;
@@ -90,10 +90,7 @@ QComboBox QAbstractItemView {
 }
 
 
-
-
-
-QPushButton{
+QToolButton, QMessageBox QPushButton{
         color:rgb(17,17,17);
         border-width: 2px;
         border-radius:16px;
@@ -104,8 +101,9 @@ QPushButton{
         border-style: solid;
         padding: 4px;
         background-color: qlineargradient(spread:pad, x1:0.5, y1:1, x2:0.5, y2:0, stop:0 rgba(220, 220, 220, 255), stop:1 rgba(255, 255, 255, 255));
+
 }
-QPushButton:hover{
+QToolButton:hover, QMessageBox QPushButton:hover{
         color:rgb(17,17,17);
         border-width: 2px;
         border-radius:16px;
@@ -118,7 +116,7 @@ QPushButton:hover{
         background-color: qlineargradient(spread:pad, x1:0.5, y1:1, x2:0.5, y2:0, stop:0 rgba(220, 220, 220, 255), stop:1 rgba(255, 255, 255, 255));
 }
 
-QPushButton:pressed{
+QToolButton:pressed, QMessageBox QPushButton:pressed{
         color:rgb(17,17,17);
         border-width: 2px;
         border-radius: 16px;
@@ -131,13 +129,12 @@ QPushButton:pressed{
         padding: 4px;
         background-color: qlineargradient(spread:pad, x1:0.5, y1:0, x2:0.5, y2:1, stop:0 rgba(220, 220, 220, 255), stop:1 rgba(255, 255, 255, 255));
 }
-QPushButton:disabled{
+QToolButton:disabled, QMessageBox QPushButton:disabled{
         color:rgb(174,167,159);
         border-width: 2px;
         border-radius: 16px;
         background-color: qlineargradient(spread:pad, x1:0.5, y1:1, x2:0.5, y2:0, stop:0 rgba(200, 200, 200, 255), stop:1 rgba(230, 230, 230, 255));
 }
-
 
 QSlider::groove {
         border-style: solid;
